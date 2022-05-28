@@ -4,6 +4,7 @@ import requests
 import json
 import io
 import boto3
+import time
 
 
 
@@ -28,6 +29,7 @@ def extract_data():
     }
 
     data = requests.request("GET", url, headers=headers, params=querystring).json()
+    date_consult_api = int( time.time() )
     
     if len(data) == 0:
         print('data not found')
@@ -36,7 +38,11 @@ def extract_data():
             league = data['response']['league']
             team = data['response']['team']
             goals = data['response']['goals']
+            fixtures = data['response']['fixtures']
             data_dict = {
+                'date_load': time.time(),
+                'date_consult_api': date_consult_api,
+                'fixtures': fixtures,
                 'league': league,
                 'team': team,
                 'goals': goals
@@ -48,7 +54,7 @@ def load_cvs(df):
     try:
         # save to s3
         destination_s3_bucket = 'data-bucket-etl-test'
-        upload_file_key = 'public/data'
+        upload_file_key = 'public/extraction_data'
         filepath =  upload_file_key + ".csv"
         #
         s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,region_name='us-east-1')
@@ -73,7 +79,7 @@ def load_json(data):
     try:
         # save to s3
         destination_s3_bucket = 'data-bucket-etl-test'
-        upload_file_key = 'public/data'
+        upload_file_key = 'public/extraction_data'
         filepath =  upload_file_key + ".json"
         #
         s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,region_name='us-east-1')
